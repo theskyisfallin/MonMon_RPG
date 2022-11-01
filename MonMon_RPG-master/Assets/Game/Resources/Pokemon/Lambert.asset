@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2825aede38d6a4e18a3b42dc61cf3b9d, type: 3}
+  m_Name: Lambert
+  m_EditorClassIdentifier: 
+  name: Lambert
+  desc: 
+  front: {fileID: 21300000, guid: f9ee85ba319ae471eb7b91970b81aba8, type: 3}
+  back: {fileID: 21300000, guid: 81110f443269a426e9f99e631c80064e, type: 3}
+  type1: 3
+  type2: 13
+  maxHp: 45
+  attack: 49
+  defense: 65
+  spAttack: 65
+  spDefense: 49
+  speed: 45
+  learableMoves:
+  - moveBase: {fileID: 11400000, guid: f865549c3ec32445f87e5a0aba49c93b, type: 2}
+    level: 1
+  - moveBase: {fileID: 11400000, guid: 40cd5730c5d9e450c974e36a1b673a9d, type: 2}
+    level: 4
+  - moveBase: {fileID: 11400000, guid: 6d7066baea92644bf9629ca1f6710622, type: 2}
+    level: 7
