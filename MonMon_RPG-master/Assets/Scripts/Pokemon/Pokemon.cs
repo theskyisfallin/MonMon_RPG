@@ -4,19 +4,33 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+[System.Serializable]
+
 public class Pokemon
 {
-    public PokemonBasic Basic { get; set; }
-    public int Level { get; set; }
+
+    [SerializeField] PokemonBasic _base;
+    [SerializeField] int level;
+
+    public PokemonBasic Basic {
+        get
+        {
+            return _base;
+        }
+    }
+    public int Level {
+        get
+        {
+            return level;
+        }
+    }
 
     public int currentHp { get; set; }
 
     public List<Move> Moves { get; set; }
 
-    public Pokemon(PokemonBasic pBasic, int pLevel)
+    public void Init()
     {
-        Basic = pBasic;
-        Level = pLevel;
         currentHp = MaxHp;
 
         //creating moves based on level
@@ -78,9 +92,15 @@ public class Pokemon
             Fainted = false
         };
 
+
+        //Checks if move is physical or special
+        float attack = (move.Base.IsSpecial) ? attacker.SpAttack : attacker.Attack;
+        float defense = (move.Base.IsSpecial) ? SpDefense : Defense;
+
+
         float modifiers = Random.Range(0.85f, 1f) * type * crit;
         float a = (2 * attacker.Level + 10) / 250f;
-        float d = a * move.Base.Power * ((float)attacker.Attack / Defense) + 2;
+        float d = a * move.Base.Power * ((float)attack / defense) + 2;
         int damage = Mathf.FloorToInt(d * modifiers);
 
         currentHp -= damage;

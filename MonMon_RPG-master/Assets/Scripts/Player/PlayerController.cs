@@ -10,6 +10,8 @@ public class PlayerController : MonoBehaviour
     public LayerMask solidObjectLayer;
     public LayerMask grass;
 
+    public event Action Encounter;
+
     private bool isMoving;
 
     private Vector2 input;
@@ -21,7 +23,7 @@ public class PlayerController : MonoBehaviour
         animator = GetComponent<Animator>();
     }
 
-    private void Update()
+    public void HandleUpdate()
     {
         if (!isMoving)
         {
@@ -85,7 +87,8 @@ public class PlayerController : MonoBehaviour
         {
             if (Random.Range(1, 101) <= 10)
             {
-                Debug.Log("You got a wild encounter");
+                animator.SetBool("isMoving", false);
+                Encounter();
             }
         }
     }

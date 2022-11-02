@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,20 +13,27 @@ public class Battle : MonoBehaviour
     [SerializeField] BattleHud enemyHud;
     [SerializeField] BattleBox dialogBox;
 
+    public event Action<bool> BattleOver;
+
     BattleState state;
 
     int currentAction;
     int currentMove;
 
-    public void Start()
+    Party playerParty;
+    Pokemon wildMon;
+
+    public void StartBattle(Party playerParty, Pokemon wildMon)
     {
+        this.playerParty = playerParty;
+        this.wildMon = wildMon;
         StartCoroutine(SetupBattle());
     }
 
     public IEnumerator SetupBattle()
     {
-        playerMon.Setup();
-        enemyMon.Setup();
+        playerMon.Setup(playerParty.GetNotFaintedMon());
+        enemyMon.Setup(wildMon);
         playerHud.SetHud(playerMon.Pokemon);
         enemyHud.SetHud(enemyMon.Pokemon);
         dialogBox.EnableMoveSelector(false);
@@ -58,9 +66,14 @@ public class Battle : MonoBehaviour
         state = BattleState.Busy;
 
         var move = playerMon.Pokemon.Moves[currentMove];
+        move.Pp--;
         yield return dialogBox.TypeDialog($"{playerMon.Pokemon.Basic.Name} used {move.Base.Name}");
 
+        playerMon.AttackAnimation();
+        yield return new WaitForSeconds(1f);
 
+
+        enemyMon.HitAnimation();
         var damageDets = enemyMon.Pokemon.TakeDamage(move, playerMon.Pokemon);
         yield return enemyHud.UpdateHp();
 
@@ -69,6 +82,10 @@ public class Battle : MonoBehaviour
         if (damageDets.Fainted)
         {
             yield return dialogBox.TypeDialog($"{enemyMon.Pokemon.Basic.Name} Fainted.");
+            enemyMon.FaintAnimation();
+
+            yield return new WaitForSeconds(2f);
+            BattleOver(true);
         }
         else
         {
@@ -81,10 +98,13 @@ public class Battle : MonoBehaviour
         state = BattleState.EnemyMove;
 
         var move = enemyMon.Pokemon.randomMove();
-
+        move.Pp--;
         yield return dialogBox.TypeDialog($"{enemyMon.Pokemon.Basic.Name} used {move.Base.Name}");
 
+        enemyMon.AttackAnimation();
+        yield return new WaitForSeconds(1f);
 
+        playerMon.HitAnimation();
         var damageDets = playerMon.Pokemon.TakeDamage(move, enemyMon.Pokemon);
         yield return playerHud.UpdateHp();
 
@@ -94,6 +114,29 @@ public class Battle : MonoBehaviour
         if (damageDets.Fainted)
         {
             yield return dialogBox.TypeDialog($"{playerMon.Pokemon.Basic.Name} Fainted");
+            playerMon.FaintAnimation();
+
+            yield return new WaitForSeconds(2f);
+
+            var nextMon = playerParty.GetNotFaintedMon();
+
+            if(nextMon != null)
+            {
+                playerMon.Setup(nextMon);
+                playerHud.SetHud(nextMon);
+
+                dialogBox.SetMoveNames(nextMon.Moves);
+
+                yield return dialogBox.TypeDialog($"Go {nextMon.Basic.Name}!");
+
+                PlayerAction();
+            }
+            else
+            {
+                yield return dialogBox.TypeDialog($"You are out of useable MonMons.");
+                BattleOver(false);
+            }
+            
         }
         else
         {
@@ -111,7 +154,7 @@ public class Battle : MonoBehaviour
             yield return dialogBox.TypeDialog("It's not very effecitve.");
     }
 
-    private void Update()
+    public void HandleUpdate()
     {
         if (state == BattleState.PlayerAction)
         {

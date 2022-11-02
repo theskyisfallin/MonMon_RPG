@@ -43,5 +43,22 @@ public class MoveBasic : ScriptableObject
     {
         get { return pp; }
     }
+
+
+    // Using gen I-III physical special split
+    public bool IsSpecial
+    {
+        get
+        {
+            if(type1 == type.Fire || type1 == type.Water || type1 == type.Grass || type1 == type.Ice || type1 == type.Electric || type1 == type.Psychic || type1 == type.Dragon)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
 }
 
