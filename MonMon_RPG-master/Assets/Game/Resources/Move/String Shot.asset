@@ -10,18 +10,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f4bb4ae60c534885bccec6e598af35a, type: 3}
-  m_Name: Growl
+  m_Name: String Shot
   m_EditorClassIdentifier: 
-  name: Growl
+  name: String Shot
   desc: 
-  type1: 1
+  type1: 12
   power: 0
-  acc: 100
+  acc: 95
   pp: 40
   category: 2
   effects:
     boosts:
-    - stat: 0
+    - stat: 4
       boost: -1
     status: 0
   target: 0

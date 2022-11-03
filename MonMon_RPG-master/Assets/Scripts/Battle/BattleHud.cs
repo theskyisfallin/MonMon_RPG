@@ -21,6 +21,10 @@ public class BattleHud : MonoBehaviour
 
     public IEnumerator UpdateHp()
     {
-        yield return hp.tickHp((float)mon.currentHp / mon.MaxHp);
+        if (mon.HpChange)
+        {
+            yield return hp.tickHp((float)mon.currentHp / mon.MaxHp);
+            mon.HpChange = false;
+        }
     }
 }

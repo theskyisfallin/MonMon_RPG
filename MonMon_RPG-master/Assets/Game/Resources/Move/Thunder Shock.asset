@@ -10,18 +10,16 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7f4bb4ae60c534885bccec6e598af35a, type: 3}
-  m_Name: Growl
+  m_Name: Thunder Shock
   m_EditorClassIdentifier: 
-  name: Growl
+  name: Thunder Shock
   desc: 
-  type1: 1
-  power: 0
+  type1: 4
+  power: 40
   acc: 100
-  pp: 40
-  category: 2
+  pp: 30
+  category: 1
   effects:
-    boosts:
-    - stat: 0
-      boost: -1
+    boosts: []
     status: 0
   target: 0
