@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum GameState { Free, Battle }
+public enum GameState { Free, Battle, Dialog }
 
 public class GameControl : MonoBehaviour
 {
@@ -12,10 +12,26 @@ public class GameControl : MonoBehaviour
 
     GameState state;
 
+    public void Awake()
+    {
+        ConditionsDB.Init();
+    }
+
     private void Start()
     {
         playerController.Encounter += StartBattle;
         battle.OnBattleOver += EndBattle;
+
+        DialogManager.Instance.OnShowDialog += () =>
+        {
+            state = GameState.Dialog;
+        };
+
+        DialogManager.Instance.OnCloseDialog += () =>
+        {
+            if(state == GameState.Dialog)
+                state = GameState.Free;
+        };
     }
 
     void StartBattle()
@@ -46,6 +62,10 @@ public class GameControl : MonoBehaviour
         else if(state == GameState.Battle)
         {
             battle.HandleUpdate();
+        }
+        else if (state == GameState.Dialog)
+        {
+            DialogManager.Instance.HandleUpdate();
         }
     }
 }

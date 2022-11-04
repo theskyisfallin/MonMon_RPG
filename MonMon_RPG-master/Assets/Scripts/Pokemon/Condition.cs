@@ -7,6 +7,8 @@ using UnityEngine;
 // will be both status conditions and weather
 public class Condition
 {
+    public ConditionID id { get; set; }
+
     public string Name { get; set; }
 
     public string Description { get; set; }

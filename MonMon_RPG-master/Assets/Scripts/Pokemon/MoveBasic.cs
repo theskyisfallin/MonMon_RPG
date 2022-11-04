@@ -16,11 +16,13 @@ public class MoveBasic : ScriptableObject
     [SerializeField] int power;
 
     [SerializeField] int acc;
-
+    [SerializeField] bool cantMiss;
     [SerializeField] int pp;
+    [SerializeField] int priority;
 
     [SerializeField] Category category;
     [SerializeField] MoveEffects effects;
+    [SerializeField] List<SecondaryEffects> secondaries;
     [SerializeField] Target target;
 
     public string Name
@@ -43,9 +45,17 @@ public class MoveBasic : ScriptableObject
     {
         get { return acc; }
     }
+    public bool CantMiss
+    {
+        get { return cantMiss; }
+    }
     public int Pp
     {
         get { return pp; }
+    }
+    public int Priority
+    {
+        get { return priority; }
     }
     public Category Category
     {
@@ -54,6 +64,10 @@ public class MoveBasic : ScriptableObject
     public MoveEffects Effects
     {
         get { return effects; }
+    }
+    public List<SecondaryEffects> Secondaries
+    {
+        get { return secondaries; }
     }
     public Target Target
     {
@@ -82,17 +96,38 @@ public class MoveBasic : ScriptableObject
 public class MoveEffects
 {
     [SerializeField] List<StatBoost> boosts;
-    [SerializeField] ConditonID status;
+    [SerializeField] ConditionID status;
+    [SerializeField] ConditionID dynamicStatus;
 
     public List<StatBoost> Boosts
     {
         get { return boosts; }
     }
-    public ConditonID Status
+    public ConditionID Status
     {
         get { return status; }
     }
+    public ConditionID DynamicStatus
+    {
+        get { return dynamicStatus; }
+    }
 
+}
+
+[System.Serializable]
+public class SecondaryEffects : MoveEffects
+{
+    [SerializeField] int chance;
+    [SerializeField] Target target;
+
+    public int Chance
+    {
+        get { return chance; }
+    }
+    public Target Target
+    {
+        get { return target; }
+    }
 }
 
 

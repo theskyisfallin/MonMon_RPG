@@ -5,10 +5,21 @@ using Random = UnityEngine.Random;
 
 public class ConditionsDB
 {
-    public static Dictionary<ConditonID, Condition> Conditions { get; set; } = new Dictionary<ConditonID, Condition>()
+    public static void Init()
+    {
+        foreach(var kvp in Conditions)
+        {
+            var conditionId = kvp.Key;
+            var condition = kvp.Value;
+
+            condition.id = conditionId;
+        }
+    }
+
+    public static Dictionary<ConditionID, Condition> Conditions { get; set; } = new Dictionary<ConditionID, Condition>()
     {
         {
-            ConditonID.psn, new Condition()
+            ConditionID.psn, new Condition()
             {
                 Name = "Poison",
                 StartMess = "has been poisoned",
@@ -20,7 +31,7 @@ public class ConditionsDB
             }
         },
         {
-            ConditonID.brn, new Condition()
+            ConditionID.brn, new Condition()
             {
                 Name = "Burn",
                 StartMess = "has been burned",
@@ -32,7 +43,7 @@ public class ConditionsDB
             }
         },
         {
-            ConditonID.par, new Condition()
+            ConditionID.par, new Condition()
             {
                 Name = "Paralyzed",
                 StartMess = "has been paralyzed",
@@ -50,7 +61,7 @@ public class ConditionsDB
             }
         },
         {
-            ConditonID.frz, new Condition()
+            ConditionID.frz, new Condition()
             {
                 Name = "Freeze",
                 StartMess = "has been frozen",
@@ -69,7 +80,7 @@ public class ConditionsDB
             }
         },
         {
-            ConditonID.slp, new Condition()
+            ConditionID.slp, new Condition()
             {
                 Name = "Sleep",
                 StartMess = "has fallen asleep",
@@ -93,11 +104,45 @@ public class ConditionsDB
                     return false;
                 }
             }
+        },
+        {
+            ConditionID.confusion, new Condition()
+            {
+                Name = "Confusion",
+                StartMess = "has been confused",
+                OnStart = (Pokemon pokemon) =>
+                {
+                    //confusion timer
+                    pokemon.dynamicStatusTime = Random.Range(1,5);
+                    Debug.Log($"Will be confused for {pokemon.dynamicStatusTime} turns");
+                },
+                OnBeforeMove = (Pokemon pokemon) =>
+                {
+                    if(pokemon.dynamicStatusTime <= 0)
+                    {
+                        pokemon.CureDynamicStatus();
+                        pokemon.StatusChanges.Enqueue($"{pokemon.Basic.Name} snapped out of confusion!");
+                        return true;
+                    }
+
+                    pokemon.dynamicStatusTime--;
+
+                    if(Random.Range(1,3) == 1)
+                        return true;
+
+
+                    pokemon.StatusChanges.Enqueue($"{pokemon.Basic.Name} is confused");
+                    pokemon.UpdateHp(pokemon.MaxHp / 8);
+                    pokemon.StatusChanges.Enqueue($"{pokemon.Basic.Name} hurt itself in confusion");
+
+                    return false;
+                }
+            }
         }
     };
 }
 
-public enum ConditonID
+public enum ConditionID
 {
-    none, psn, brn, slp, par, frz
+    none, psn, brn, slp, par, frz, confusion
 }

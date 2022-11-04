@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -29,6 +30,8 @@ public class Pokemon
 
     public List<Move> Moves { get; set; }
 
+    public Move CurrentMove { get; set; }
+
     public Dictionary<Stat, int> Stats { get; private set; }
 
     public Dictionary<Stat, int> Boosts { get; private set; }
@@ -37,7 +40,12 @@ public class Pokemon
     public int StatusTime { get; set; }
     public Queue<string> StatusChanges { get; private set; } = new Queue<string>();
 
+    public Condition dynamicStatus { get; private set; }
+    public int dynamicStatusTime { get; set; }
+
     public bool HpChange { get; set; }
+
+    public event Action OnStatusChange;
 
     public void Init()
     {
@@ -60,6 +68,9 @@ public class Pokemon
         currentHp = MaxHp;
 
         ResetBoost();
+
+        Status = null;
+        dynamicStatus = null;
     }
 
     void CalcStats()
@@ -71,7 +82,7 @@ public class Pokemon
         Stats.Add(Stat.SpDefense, Mathf.FloorToInt((Basic.SpDefense * Level) / 100f) + 5);
         Stats.Add(Stat.Speed, Mathf.FloorToInt((Basic.Speed * Level) / 100f) + 5);
 
-        MaxHp = Mathf.FloorToInt((Basic.MaxHp * Level) / 100f) + 10;
+        MaxHp = Mathf.FloorToInt((Basic.MaxHp * Level) / 100f) + 10 + Level;
     }
 
     void ResetBoost()
@@ -82,7 +93,9 @@ public class Pokemon
             { Stat.Defense, 0 },
             { Stat.SpAttack, 0 },
             { Stat.SpDefense, 0 },
-            { Stat.Speed, 0 }
+            { Stat.Speed, 0 },
+            { Stat.Accuracy, 0 },
+            { Stat.Evasion, 0 }
         };
     }
 
@@ -182,43 +195,83 @@ public class Pokemon
         HpChange = true;
     }
 
-    public void SetStatus(ConditonID ID)
+    public void SetStatus(ConditionID ID)
     {
+        if(Status != null)
+        {
+            return;
+        }
+
         Status = ConditionsDB.Conditions[ID];
 
         // DO NOT REMOVE ?s CAUSES CRASH IF IT IS NULL
         Status?.OnStart?.Invoke(this);
         StatusChanges.Enqueue($"{Basic.Name} {Status.StartMess}");
+
+        OnStatusChange?.Invoke();
     }
 
     public void CureStatus()
     {
         Status = null;
+        OnStatusChange?.Invoke();
+    }
+
+    public void SetDynamicStatus(ConditionID ID)
+    {
+        if (dynamicStatus != null)
+        {
+            return;
+        }
+
+        dynamicStatus = ConditionsDB.Conditions[ID];
+
+        // DO NOT REMOVE ?s CAUSES CRASH IF IT IS NULL
+        dynamicStatus?.OnStart?.Invoke(this);
+        StatusChanges.Enqueue($"{Basic.Name} {dynamicStatus.StartMess}");
+    }
+
+    public void CureDynamicStatus()
+    {
+        dynamicStatus = null;
     }
 
     public Move randomMove()
     {
-        int r = Random.Range(0, Moves.Count);
-        return Moves[r];
+        var movesWithPP = Moves.Where(x => x.Pp > 0).ToList();
+
+        int r = Random.Range(0, movesWithPP.Count);
+        return movesWithPP[r];
     }
 
     public bool OnBeforeMove()
     {
+        bool canMove = true;
         if(Status?.OnBeforeMove != null)
         {
-            return Status.OnBeforeMove(this);
+            if (!Status.OnBeforeMove(this))
+                canMove = false;
         }
-        return true;
+        if (dynamicStatus?.OnBeforeMove != null)
+        {
+            if (!dynamicStatus.OnBeforeMove(this))
+                canMove = false;
+        }
+
+
+        return canMove;
     }
 
     public void OnAfterTurn()
     {
         // Second ? is null conditional operator (it's pretty neat ALSO DO NOT REMOVE CAUSES CRASH)
         Status?.OnAfterTurn?.Invoke(this);
+        dynamicStatus?.OnAfterTurn?.Invoke(this);
     }
 
     public void OnBattleOver()
     {
+        dynamicStatus = null;
         ResetBoost();
     }
 }
