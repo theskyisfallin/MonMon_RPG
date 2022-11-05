@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum GameState { Free, Battle, Dialog }
+public enum GameState { Free, Battle, Dialog, Cutscene }
 
 public class GameControl : MonoBehaviour
 {
@@ -12,8 +12,11 @@ public class GameControl : MonoBehaviour
 
     GameState state;
 
+    public static GameControl Instance { get; private set; }
+
     public void Awake()
     {
+        Instance = this;
         ConditionsDB.Init();
     }
 
@@ -21,6 +24,16 @@ public class GameControl : MonoBehaviour
     {
         playerController.Encounter += StartBattle;
         battle.OnBattleOver += EndBattle;
+
+        playerController.OnEnterTrainersView += (Collider2D trainerCol) =>
+        {
+            var trainer = trainerCol.GetComponentInParent<TrainerController>();
+            if (trainer != null)
+            {
+                state = GameState.Cutscene;
+                StartCoroutine(trainer.TriggerTrainerBattle(playerController));
+            }
+        };
 
         DialogManager.Instance.OnShowDialog += () =>
         {
@@ -46,8 +59,30 @@ public class GameControl : MonoBehaviour
         battle.StartBattle(playerParty, wildMon);
     }
 
+    TrainerController trainer;
+
+    public void StartTrainerBattle(TrainerController trainer)
+    {
+        state = GameState.Battle;
+        battle.gameObject.SetActive(true);
+        worldCam.gameObject.SetActive(false);
+
+        this.trainer = trainer;
+        var playerParty = playerController.GetComponent<Party>();
+        var trainerParty = trainer.GetComponent<Party>();
+
+        battle.StartTrainerBattle(playerParty, trainerParty);
+    }
+
     void EndBattle(bool won)
     {
+        if (trainer != null && won == true)
+        {
+            trainer.BattleLost();
+            trainer = null;
+        }
+            
+
         state = GameState.Free;
         battle.gameObject.SetActive(false);
         worldCam.gameObject.SetActive(true);

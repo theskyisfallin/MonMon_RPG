@@ -16,8 +16,8 @@ TagManager:
   - SolidObjects
   - TallGrass
   - Interactable
-  - 
-  - 
+  - Player
+  - Fov
   - 
   - 
   - 

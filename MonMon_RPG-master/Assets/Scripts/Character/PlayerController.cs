@@ -6,27 +6,24 @@ using Random = UnityEngine.Random;
 
 public class PlayerController : MonoBehaviour
 {
-    public float moveSpeed;
-    public LayerMask solidObjectLayer;
-    public LayerMask interactableLayer;
-    public LayerMask grass;
+    [SerializeField] string name;
+    [SerializeField] Sprite sprite;
 
     public event Action Encounter;
-
-    private bool isMoving;
+    public event Action<Collider2D> OnEnterTrainersView;
 
     private Vector2 input;
 
-    private Animator animator;
+    private Character character;
 
     private void Awake()
     {
-        animator = GetComponent<Animator>();
+        character = GetComponent<Character>();
     }
 
     public void HandleUpdate()
     {
-        if (!isMoving)
+        if (!character.IsMoving)
         {
             input.x = Input.GetAxisRaw("Horizontal");
             input.y = Input.GetAxisRaw("Vertical");
@@ -37,21 +34,11 @@ public class PlayerController : MonoBehaviour
 
             if (input != Vector2.zero)
             {
-                animator.SetFloat("moveX", input.x);
-                animator.SetFloat("moveY", input.y);
-
-                var targetPos = transform.position;
-                targetPos.x += input.x;
-                targetPos.y += input.y;
-
-                if (IsWalkable(targetPos))
-                {
-                    StartCoroutine(Move(targetPos));
-                }
+                StartCoroutine(character.Move(input, OnMoveOver));
             }
         }
 
-        animator.SetBool("isMoving", isMoving);
+        character.HandleUpdate();
 
         if (Input.GetKeyDown(KeyCode.Z))
             Interact();
@@ -59,56 +46,56 @@ public class PlayerController : MonoBehaviour
 
     void Interact()
     {
-        var facingDir = new Vector3(animator.GetFloat("moveX"), animator.GetFloat("moveY"));
+        var facingDir = new Vector3(character.Animator.MoveX, character.Animator.MoveY);
         var interactPos = transform.position + facingDir;
 
         // Debug.DrawLine(transform.position, interactPos, Color.blue, 0.5f);
 
-        var collider = Physics2D.OverlapCircle(interactPos, 0.3f, interactableLayer);
+        var collider = Physics2D.OverlapCircle(interactPos, 0.3f, Layers.i.InteractableLayer);
 
         if(collider != null)
         {
-            collider.GetComponent<Interactable>()?.Interact();
+            collider.GetComponent<Interactable>()?.Interact(transform);
         }
     }
 
-    // movement over a period of time not instant
-    IEnumerator Move(Vector3 targetPos)
+
+    private void OnMoveOver()
     {
-        isMoving = true;
-        //takes current position and target position and if it's greater than a small amount start to move to target until
-        //current position and target are too close and breaks the loop then does the last little bit outside the loop
-        while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
-        {
-            transform.position = Vector3.MoveTowards(transform.position, targetPos, moveSpeed * Time.deltaTime);
-            yield return null;
-        }
-        transform.position = targetPos;
-
-        isMoving = false;
-
         checkForEncounter();
+        CheckIfInTrainerView();
     }
 
-    private bool IsWalkable(Vector3 targetPos)
-    {
-        if (Physics2D.OverlapCircle(targetPos, 0.2f, solidObjectLayer | interactableLayer) != null)
-        {
-            return false;
-        }
-
-        return true;
-    }
 
     private void checkForEncounter()
     {
-        if (Physics2D.OverlapCircle(transform.position, 0.2f, grass) != null)
+        if (Physics2D.OverlapCircle(transform.position, 0.2f, Layers.i.GrassLayer) != null)
         {
             if (Random.Range(1, 101) <= 10)
             {
-                animator.SetBool("isMoving", false);
+                character.Animator.IsMoving = false;
                 Encounter();
             }
         }
+    }
+
+    private void CheckIfInTrainerView()
+    {
+        var collider = Physics2D.OverlapCircle(transform.position, 0.2f, Layers.i.FovLayer);
+
+        if (collider != null)
+        {
+            character.Animator.IsMoving = false;
+            OnEnterTrainersView?.Invoke(collider);
+        }
+    }
+
+    public string Name
+    {
+        get => name;
+    }
+    public Sprite Sprite
+    {
+        get => sprite;
     }
 }

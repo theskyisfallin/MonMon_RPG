@@ -16,10 +16,14 @@ MonoBehaviour:
   desc: 
   type1: 8
   power: 0
-  acc: 100
-  pp: 20
+  acc: 75
+  cantMiss: 0
+  pp: 35
+  priority: 0
   category: 2
   effects:
     boosts: []
     status: 1
+    dynamicStatus: 0
+  secondaries: []
   target: 0

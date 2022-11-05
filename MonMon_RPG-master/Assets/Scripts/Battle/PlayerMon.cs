@@ -48,11 +48,17 @@ public class PlayerMon : MonoBehaviour
         else
             image.sprite = Pokemon.Basic.Front;
 
+        hud.gameObject.SetActive(true);
         hud.SetHud(pokemon);
 
 
         image.color = orginalCol;
         EnterAnimation();
+    }
+
+    public void Clear()
+    {
+        hud.gameObject.SetActive(false);
     }
 
     public void EnterAnimation()
