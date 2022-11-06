@@ -13,6 +13,13 @@ public class Pokemon
     [SerializeField] PokemonBasic _base;
     [SerializeField] int level;
 
+    public Pokemon(PokemonBasic pBase, int pLevel)
+    {
+        _base = pBase;
+        level = pLevel;
+        Init();
+    }
+
     public PokemonBasic Basic {
         get
         {
@@ -26,6 +33,8 @@ public class Pokemon
         }
     }
 
+    public int Exp { get; set; }
+
     public int currentHp { get; set; }
 
     public List<Move> Moves { get; set; }
@@ -38,7 +47,7 @@ public class Pokemon
 
     public Condition Status { get; private set; }
     public int StatusTime { get; set; }
-    public Queue<string> StatusChanges { get; private set; } = new Queue<string>();
+    public Queue<string> StatusChanges { get; private set; }
 
     public Condition dynamicStatus { get; private set; }
     public int dynamicStatusTime { get; set; }
@@ -57,11 +66,15 @@ public class Pokemon
             {
                 Moves.Add(new Move(move.Base));
             }
-            if (Moves.Count >= 4)
+            if (Moves.Count >= PokemonBasic.MaxNumOfMoves)
             {
                 break;
             }
         }
+
+        Exp = Basic.GetExpForLevel(Level);
+
+        StatusChanges = new Queue<string>();
 
         CalcStats();
 
@@ -130,6 +143,30 @@ public class Pokemon
 
             Debug.Log($"{stat} was boosted {Boosts[stat]}");
         }
+    }
+
+    public bool CheckForLevelUp()
+    {
+        if (Exp > Basic.GetExpForLevel(level + 1))
+        {
+            level++;
+            return true;
+        }
+
+        return false;
+    }
+
+    public void LearnMove(Learnable moveToLearn)
+    {
+        if (Moves.Count > PokemonBasic.MaxNumOfMoves)
+            return;
+
+        Moves.Add(new Move(moveToLearn.Base));
+    }
+
+    public Learnable GetLearnableMoveAtCurrent()
+    {
+        return Basic.LearnableMoves.Where(x => x.Level == level).FirstOrDefault();
     }
 
     public int MaxHp { get; private set; }

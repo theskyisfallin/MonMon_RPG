@@ -51,7 +51,7 @@ public class PlayerMon : MonoBehaviour
         hud.gameObject.SetActive(true);
         hud.SetHud(pokemon);
 
-
+        transform.localScale = new Vector3(1, 1, 1);
         image.color = orginalCol;
         EnterAnimation();
     }
@@ -94,5 +94,23 @@ public class PlayerMon : MonoBehaviour
         var sequence = DOTween.Sequence();
         sequence.Append(image.transform.DOLocalMoveY(orginalPos.y - 150f, 0.5f));
         sequence.Join(image.DOFade(0f, 0.5f));
+    }
+
+    public IEnumerator CaptureAnimation()
+    {
+        var sequence = DOTween.Sequence();
+        sequence.Append(image.DOFade(0, 0.5f));
+        sequence.Join(image.transform.DOLocalMoveY(orginalPos.y + 150f, 0.5f));
+        sequence.Join(image.transform.DOScale(new Vector3(0.3f, 0.3f, 1f), 0.5f));
+        yield return sequence.WaitForCompletion();
+    }
+
+    public IEnumerator BreakOutAnimation()
+    {
+        var sequence = DOTween.Sequence();
+        sequence.Append(image.DOFade(1, 0.5f));
+        sequence.Join(image.transform.DOLocalMoveY(orginalPos.y, 0.5f));
+        sequence.Join(image.transform.DOScale(new Vector3(1f, 1f, 1f), 0.5f));
+        yield return sequence.WaitForCompletion();
     }
 }

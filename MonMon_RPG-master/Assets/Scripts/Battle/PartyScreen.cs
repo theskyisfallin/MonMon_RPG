@@ -13,7 +13,7 @@ public class PartyScreen : MonoBehaviour
 
     public void Init()
     {
-        members = GetComponentsInChildren<PartyMonUI>();
+        members = GetComponentsInChildren<PartyMonUI>(true);
     }
 
     public void SetPartyData(List<Pokemon> pokemon)
@@ -24,7 +24,10 @@ public class PartyScreen : MonoBehaviour
         for (int i = 0; i < members.Length; i++)
         {
             if (i < pokemon.Count)
+            {
+                members[i].gameObject.SetActive(true);
                 members[i].SetHud(pokemon[i]);
+            }
             else
                 members[i].gameObject.SetActive(false);
         }
