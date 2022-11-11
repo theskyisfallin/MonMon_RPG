@@ -52,9 +52,8 @@ public class Pokemon
     public Condition dynamicStatus { get; private set; }
     public int dynamicStatusTime { get; set; }
 
-    public bool HpChange { get; set; }
-
     public event Action OnStatusChange;
+    public event Action OnHpChange;
 
     public void Init()
     {
@@ -84,6 +83,42 @@ public class Pokemon
 
         Status = null;
         dynamicStatus = null;
+    }
+
+    public Pokemon(PokemonSave saveData)
+    {
+        _base = PokemonDB.GetPokemonViaName(saveData.name);
+
+        currentHp = saveData.hp;
+        level = saveData.level;
+        Exp = saveData.exp;
+
+        if (saveData.statusId != null)
+            Status = ConditionsDB.Conditions[saveData.statusId.Value];
+        else
+            Status = null;
+
+        Moves = saveData.moves.Select(s => new Move(s)).ToList();
+
+        CalcStats();
+        StatusChanges = new Queue<string>();
+        ResetBoost();
+        dynamicStatus = null;
+    }
+
+    public PokemonSave GetSaveData()
+    {
+        var saveData = new PokemonSave()
+        {
+            name = Basic.Name,
+            hp = currentHp,
+            level = Level,
+            exp = Exp,
+            statusId = Status?.id,
+            moves = Moves.Select(m => m.GetSaveData()).ToList()
+        };
+
+        return saveData;
     }
 
     void CalcStats()
@@ -156,17 +191,22 @@ public class Pokemon
         return false;
     }
 
-    public void LearnMove(Learnable moveToLearn)
+    public void LearnMove(MoveBasic moveToLearn)
     {
         if (Moves.Count > PokemonBasic.MaxNumOfMoves)
             return;
 
-        Moves.Add(new Move(moveToLearn.Base));
+        Moves.Add(new Move(moveToLearn));
     }
 
     public Learnable GetLearnableMoveAtCurrent()
     {
         return Basic.LearnableMoves.Where(x => x.Level == level).FirstOrDefault();
+    }
+
+    public bool HasMove(MoveBasic moveToCheck)
+    {
+        return Moves.Count(m => m.Base == moveToCheck) > 0;
     }
 
     public int MaxHp { get; private set; }
@@ -221,15 +261,21 @@ public class Pokemon
         float d = a * move.Base.Power * ((float)attack / defense) + 2;
         int damage = Mathf.FloorToInt(d * modifiers);
 
-        UpdateHp(damage);
+        DecreaseHp(damage);
 
         return damageDets;
     }
 
-    public void UpdateHp(int damage)
+    public void DecreaseHp(int damage)
     {
         currentHp = Mathf.Clamp(currentHp - damage, 0, MaxHp);
-        HpChange = true;
+        OnHpChange?.Invoke();
+    }
+
+    public void IncreaseHp(int amount)
+    {
+        currentHp = Mathf.Clamp(currentHp + amount, 0, MaxHp);
+        OnHpChange?.Invoke();
     }
 
     public void SetStatus(ConditionID ID)
@@ -320,4 +366,15 @@ public class DamageDets
     public float Crit { get; set; }
 
     public float Type { get; set; }
+}
+
+[System.Serializable]
+public class PokemonSave
+{
+    public string name;
+    public int hp;
+    public int level;
+    public int exp;
+    public ConditionID? statusId;
+    public List<MoveSave> moves;
 }

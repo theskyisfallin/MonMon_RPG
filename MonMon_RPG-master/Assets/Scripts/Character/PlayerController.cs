@@ -1,18 +1,14 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class PlayerController : MonoBehaviour
+public class PlayerController : MonoBehaviour, ISavable
 {
     [SerializeField] string name;
     [SerializeField] Sprite sprite;
-
-    const float offsetY = 0.3f;
-
-    public event Action Encounter;
-    public event Action<Collider2D> OnEnterTrainersView;
 
     private Vector2 input;
 
@@ -43,10 +39,10 @@ public class PlayerController : MonoBehaviour
         character.HandleUpdate();
 
         if (Input.GetKeyDown(KeyCode.Z))
-            Interact();
+            StartCoroutine(Interact());
     }
 
-    void Interact()
+    IEnumerator Interact()
     {
         var facingDir = new Vector3(character.Animator.MoveX, character.Animator.MoveY);
         var interactPos = transform.position + facingDir;
@@ -57,39 +53,45 @@ public class PlayerController : MonoBehaviour
 
         if(collider != null)
         {
-            collider.GetComponent<Interactable>()?.Interact(transform);
+            yield return collider.GetComponent<Interactable>()?.Interact(transform);
         }
     }
 
 
     private void OnMoveOver()
     {
-        checkForEncounter();
-        CheckIfInTrainerView();
-    }
+        var colliders = Physics2D.OverlapCircleAll(transform.position - new Vector3(0, character.OffsetY), 0.2f, Layers.i.TriggerableLayers);
 
-
-    private void checkForEncounter()
-    {
-        if (Physics2D.OverlapCircle(transform.position - new Vector3(0, offsetY), 0.2f, Layers.i.GrassLayer) != null)
+        foreach (var collider in colliders)
         {
-            if (Random.Range(1, 101) <= 10)
+            var triggerable = collider.GetComponent<IPlayerTriggerable>();
+            if (triggerable != null)
             {
-                character.Animator.IsMoving = false;
-                Encounter();
+                triggerable.OnPlayerTriggered(this);
+                break;
             }
         }
     }
 
-    private void CheckIfInTrainerView()
+    public object CaptureState()
     {
-        var collider = Physics2D.OverlapCircle(transform.position - new Vector3(0, offsetY), 0.2f, Layers.i.FovLayer);
-
-        if (collider != null)
+        var saveData = new PlayerSave()
         {
-            character.Animator.IsMoving = false;
-            OnEnterTrainersView?.Invoke(collider);
-        }
+            position = new float[] { transform.position.x, transform.position.y },
+            mons = GetComponent<Party>().Pokemon.Select(p => p.GetSaveData()).ToList()
+        };
+
+        return saveData;
+    }
+
+    public void RestoreState(object state)
+    {
+        var saveData = (PlayerSave)state;
+        var pos = saveData.position;
+
+        transform.position = new Vector3(pos[0], pos[1]);
+
+        GetComponent<Party>().Pokemon = saveData.mons.Select(s => new Pokemon(s)).ToList();
     }
 
     public string Name
@@ -100,4 +102,12 @@ public class PlayerController : MonoBehaviour
     {
         get => sprite;
     }
+    public Character Character => character;
+}
+
+[Serializable]
+public class PlayerSave
+{
+    public float[] position;
+    public List<PokemonSave> mons;
 }

@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 27bd8f4ca57384cb8a7bc42320ea63f0, type: 3}
+  m_Name: HM01
+  m_EditorClassIdentifier: 
+  name: HM01
+  desc: Teaches Cut to a MonMon
+  icon: {fileID: 961772290, guid: 3ae12697ae504414bbf0797ea36dfddd, type: 3}
+  move: {fileID: 11400000, guid: 6717232b9c0ec40529aa49f27473027e, type: 2}
+  isHM: 1

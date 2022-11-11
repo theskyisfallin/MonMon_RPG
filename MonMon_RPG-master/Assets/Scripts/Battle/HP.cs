@@ -7,6 +7,8 @@ public class HP : MonoBehaviour
 {
     [SerializeField] GameObject health;
 
+    public bool IsUpdating { get; private set; }
+
     public void SetHp(float hpNormal)
     {
         health.transform.localScale = new Vector3(hpNormal, 1f);
@@ -14,6 +16,8 @@ public class HP : MonoBehaviour
 
     public IEnumerator tickHp(float newHp)
     {
+        IsUpdating = true;
+
         float currentHp = health.transform.localScale.x;
         float change = currentHp - newHp;
 
@@ -24,5 +28,6 @@ public class HP : MonoBehaviour
             yield return null;
         }
         health.transform.localScale = new Vector3(newHp, 1f);
+        IsUpdating = false;
     }
 }

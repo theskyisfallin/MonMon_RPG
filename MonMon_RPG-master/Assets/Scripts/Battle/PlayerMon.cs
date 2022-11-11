@@ -40,16 +40,16 @@ public class PlayerMon : MonoBehaviour
         orginalCol = image.color;
     }
 
-    public void Setup(Pokemon pokemon)
+    public void Setup(Pokemon mon)
     {
-        Pokemon = pokemon;
+        Pokemon = mon;
         if (isPlayer)
             image.sprite = Pokemon.Basic.Back;
         else
             image.sprite = Pokemon.Basic.Front;
 
         hud.gameObject.SetActive(true);
-        hud.SetHud(pokemon);
+        hud.SetHud(mon);
 
         transform.localScale = new Vector3(1, 1, 1);
         image.color = orginalCol;

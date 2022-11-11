@@ -15,12 +15,17 @@ public class BattleBox : MonoBehaviour
     [SerializeField] List<Text> actionText;
     [SerializeField] List<Text> moveText;
 
-    [SerializeField] Color selectedColor;
-
     [SerializeField] Text ppText;
     [SerializeField] Text typeText;
     [SerializeField] Text yesText;
     [SerializeField] Text noText;
+
+    Color highlight;
+
+    private void Start()
+    {
+        highlight = GlobalSettings.i.Hightlight;
+    }
 
     public void SetDialog(string dialog)
     {
@@ -65,7 +70,7 @@ public class BattleBox : MonoBehaviour
         for (int i = 0; i < actionText.Count; i++)
         {
             if (i == selectedAction)
-                actionText[i].color = selectedColor;
+                actionText[i].color = highlight;
             else
                 actionText[i].color = Color.black;
         }
@@ -76,7 +81,7 @@ public class BattleBox : MonoBehaviour
         for (int i = 0; i < moveText.Count; i++)
         {
             if (i == selectedMove)
-                moveText[i].color = selectedColor;
+                moveText[i].color = highlight;
             else
                 moveText[i].color = Color.black;
         }
@@ -94,13 +99,13 @@ public class BattleBox : MonoBehaviour
     {
         if (yesSelected)
         {
-            yesText.color = selectedColor;
+            yesText.color = highlight;
             noText.color = Color.black;
         }
         else
         {
             yesText.color = Color.black;
-            noText.color = selectedColor;
+            noText.color = highlight;
         }
     }
 

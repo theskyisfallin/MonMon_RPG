@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TrainerController : MonoBehaviour, Interactable
+public class TrainerController : MonoBehaviour, Interactable, ISavable
 {
     [SerializeField] string name;
     [SerializeField] Sprite sprite;
@@ -31,20 +31,19 @@ public class TrainerController : MonoBehaviour, Interactable
         character.HandleUpdate();
     }
 
-    public void Interact(Transform start)
+    public IEnumerator Interact(Transform start)
     {
         character.LookTowards(start.position);
 
         if (!battleLost)
         {
-            StartCoroutine(DialogManager.Instance.ShowDialog(dialog, () =>
-            {
-                GameControl.Instance.StartTrainerBattle(this);
-            }));
+            yield return DialogManager.Instance.ShowDialog(dialog);
+
+            GameControl.Instance.StartTrainerBattle(this);
         }
         else
         {
-            StartCoroutine(DialogManager.Instance.ShowDialog(lostDialog));
+            yield return DialogManager.Instance.ShowDialog(lostDialog);
         }
     }
 
@@ -61,10 +60,9 @@ public class TrainerController : MonoBehaviour, Interactable
 
         yield return character.Move(moveVec);
 
-        StartCoroutine(DialogManager.Instance.ShowDialog(dialog, () =>
-        {
-            GameControl.Instance.StartTrainerBattle(this);
-        }));
+        yield return DialogManager.Instance.ShowDialog(dialog);
+
+        GameControl.Instance.StartTrainerBattle(this);
     }
 
     public void BattleLost()
@@ -86,6 +84,20 @@ public class TrainerController : MonoBehaviour, Interactable
         fov.transform.eulerAngles = new Vector3(0f, 0f, angle);
     }
 
+    public object CaptureState()
+    {
+        return battleLost;
+    }
+
+    public void RestoreState(object state)
+    {
+        battleLost = (bool)state;
+
+        if (battleLost)
+        {
+            fov.gameObject.SetActive(false);
+        }
+    }
 
     public string Name
     {
