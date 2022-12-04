@@ -12,6 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: aa8bfbbaf47d6450ba424d189d66d5c1, type: 3}
   m_Name: Mon Ball
   m_EditorClassIdentifier: 
-  name: MonBall
+  name: Mon Ball
   desc: A normal MonBall
   icon: {fileID: 1665427730, guid: b0e812fba0749436987e9d3b3ea3eedd, type: 3}
+  catchRateModifer: 1

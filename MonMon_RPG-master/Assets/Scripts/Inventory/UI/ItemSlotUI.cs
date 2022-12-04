@@ -10,6 +10,7 @@ public class ItemSlotUI : MonoBehaviour
 
     RectTransform rectTrasform;
 
+    // do nothing on awake but needs to be here to know where to call in inventoryUI
     private void Awake()
     {
         
@@ -20,6 +21,7 @@ public class ItemSlotUI : MonoBehaviour
 
     public float Height => rectTrasform.rect.height;
 
+    // sets the items you have in your inventory
     public void SetData(ItemSlot item)
     {
         rectTrasform = GetComponent<RectTransform>();

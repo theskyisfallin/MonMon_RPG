@@ -4,6 +4,8 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// script used for hard scene switching before I started using additive scene loading/switching
+// no longer used but kept in because it could be useful in the futrue
 public class Portal : MonoBehaviour, IPlayerTriggerable
 {
     [SerializeField] int sceneToLoad = -1;
@@ -18,6 +20,8 @@ public class Portal : MonoBehaviour, IPlayerTriggerable
         this.player = player;
         StartCoroutine(SwitchScene());
     }
+
+    public bool TriggerMulti => false;
 
     Fader fader;
 

@@ -4,20 +4,24 @@ using UnityEngine;
 
 public class Layers : MonoBehaviour
 {
+    // user input in unity
     [SerializeField] LayerMask solidObjectLayer;
     [SerializeField] LayerMask interactableLayer;
     [SerializeField] LayerMask grass;
     [SerializeField] LayerMask player;
     [SerializeField] LayerMask fov;
     [SerializeField] LayerMask portal;
+    [SerializeField] LayerMask triggerLayer;
 
     public static Layers i { get; set; }
 
+    // awake init this
     private void Awake()
     {
         i = this;
     }
 
+    // get all layers in game
     public LayerMask SoildLayer
     {
         get => solidObjectLayer;
@@ -43,8 +47,9 @@ public class Layers : MonoBehaviour
         get => portal;
     }
 
+    // triggerable layers
     public LayerMask TriggerableLayers
     {
-        get => grass | fov | portal;
+        get => grass | fov | portal | triggerLayer;
     }
 }

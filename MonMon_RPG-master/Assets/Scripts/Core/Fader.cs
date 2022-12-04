@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
+// handles simple fade in and fade out when walking into portals.
 public class Fader : MonoBehaviour
 {
     Image image;

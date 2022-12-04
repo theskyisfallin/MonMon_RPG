@@ -14,11 +14,13 @@ public class PlayerController : MonoBehaviour, ISavable
 
     private Character character;
 
+    // know what chacter you are to, in this script it is the player
     private void Awake()
     {
         character = GetComponent<Character>();
     }
 
+    // handle the player movement
     public void HandleUpdate()
     {
         if (!character.IsMoving)
@@ -42,6 +44,7 @@ public class PlayerController : MonoBehaviour, ISavable
             StartCoroutine(Interact());
     }
 
+    // when the player interacts with something check the palyer and interact
     IEnumerator Interact()
     {
         var facingDir = new Vector3(character.Animator.MoveX, character.Animator.MoveY);
@@ -57,22 +60,33 @@ public class PlayerController : MonoBehaviour, ISavable
         }
     }
 
+    IPlayerTriggerable InTrigger;
 
+    // checks for things such as trainer fov and wild grass when the player moves over and runs these
     private void OnMoveOver()
     {
         var colliders = Physics2D.OverlapCircleAll(transform.position - new Vector3(0, character.OffsetY), 0.2f, Layers.i.TriggerableLayers);
 
+        IPlayerTriggerable triggerable = null;
         foreach (var collider in colliders)
         {
-            var triggerable = collider.GetComponent<IPlayerTriggerable>();
+            triggerable = collider.GetComponent<IPlayerTriggerable>();
             if (triggerable != null)
             {
+                if (triggerable == InTrigger && !triggerable.TriggerMulti)
+                    break;
+
                 triggerable.OnPlayerTriggered(this);
+                InTrigger = triggerable;
                 break;
             }
         }
+
+        if (colliders.Count() == 0 || triggerable != InTrigger)
+            InTrigger = null;
     }
 
+    // if you need to save just save the players current position and party
     public object CaptureState()
     {
         var saveData = new PlayerSave()
@@ -84,6 +98,7 @@ public class PlayerController : MonoBehaviour, ISavable
         return saveData;
     }
 
+    // restores the players saved position and party
     public void RestoreState(object state)
     {
         var saveData = (PlayerSave)state;
@@ -105,6 +120,7 @@ public class PlayerController : MonoBehaviour, ISavable
     public Character Character => character;
 }
 
+// players save data
 [Serializable]
 public class PlayerSave
 {

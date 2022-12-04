@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
+// the inventory states it can have
 public enum InventoryUIState { ItemSelect, PartySelect, MoveToForget, Busy }
 
 public class InventoryUI : MonoBehaviour
 {
+    // set by user in unity
     [SerializeField] GameObject itemList;
     [SerializeField] ItemSlotUI item;
 
@@ -36,12 +38,15 @@ public class InventoryUI : MonoBehaviour
 
     Inventory inventory;
     RectTransform itemListRect;
+
+    // on awake fetch inventory and get player's item list
     private void Awake()
     {
         inventory = Inventory.GetInventory();
         itemListRect = itemList.GetComponent<RectTransform>();
     }
 
+    // on start update the item list and subscribe to UpdateItemList action
     private void Start()
     {
         UpdateItemList();
@@ -49,6 +54,9 @@ public class InventoryUI : MonoBehaviour
         inventory.OnUpdated += UpdateItemList;
     }
 
+    // when UpdateItemList is called get rid of the old list
+    // possibly from last run
+    // and create the new item list
     void UpdateItemList()
     {
         foreach (Transform child in itemList.transform)
@@ -67,10 +75,12 @@ public class InventoryUI : MonoBehaviour
         UpdateItemSelect();
     }
 
+    // handles updates and what you have selected in the inventory
     public void HandleUpdate(Action onBack, Action<ItemBase> onItemUsed=null)
     {
         this.onItemUsed = onItemUsed;
 
+        // if you first go into your inventory/bag
         if (state == InventoryUIState.ItemSelect)
         {
             int prevSelected = selected;
@@ -85,6 +95,8 @@ public class InventoryUI : MonoBehaviour
             else if (Input.GetKeyDown(KeyCode.LeftArrow))
                 selectedCat--;
 
+            // allows for cycling through three categories by just pressing one button
+            // and then loops
             if (selectedCat > Inventory.ItemCategories.Count - 1)
                 selectedCat = 0;
             else if (selectedCat < 0)
@@ -104,11 +116,13 @@ public class InventoryUI : MonoBehaviour
                 UpdateItemSelect();
             }
 
+            // if you selcted an item or if you back out of the inventory
             if (Input.GetKeyDown(KeyCode.Z))
                 StartCoroutine(ItemSelected());
             else if (Input.GetKeyDown(KeyCode.X))
                 onBack?.Invoke();
         }
+        // player opens up their party screen by using an item
         else if (state == InventoryUIState.PartySelect)
         {
             Action onSelected = () =>
@@ -122,6 +136,7 @@ public class InventoryUI : MonoBehaviour
 
             party.HandleUpdate(onSelected, onBackParty);
         }
+        // user tries to learn a new move using TM/HM
         else if (state == InventoryUIState.MoveToForget)
         {
             Action<int> onMoveSelected = (int moveIndex) =>
@@ -133,12 +148,14 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+    // if an item is selected run this functin
     IEnumerator ItemSelected()
     {
         state = InventoryUIState.Busy;
 
         var item = inventory.GetItem(selected, selectedCat);
-        
+
+        // checks if item can be used inside or outside of battle and tells user
         if (GameControl.Instance.State == GameState.Battle)
         {
             // in battle
@@ -159,12 +176,13 @@ public class InventoryUI : MonoBehaviour
                 yield break;
             }
         }
-
+        // mon ball selection
         if (selectedCat == (int)ItemCategory.MonBalls)
         {
             // Mon ball
             StartCoroutine(UseItem());
         }
+        // if you select a TM/HM show if the item is usable or not
         else
         {
             OpenPartyScreen();
@@ -174,6 +192,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+    // when the player tries to use an item
     IEnumerator UseItem()
     {
         state = InventoryUIState.Busy;
@@ -181,6 +200,7 @@ public class InventoryUI : MonoBehaviour
         yield return HandleTmItems();
 
         var usedItem = inventory.UseItem(selected, party.SelectedMon, selectedCat);
+        // if using a recovery tiem check if it will do anything and use it/show player
         if (usedItem != null)
         {
             if (usedItem is Recovery)
@@ -188,24 +208,29 @@ public class InventoryUI : MonoBehaviour
 
             onItemUsed?.Invoke(usedItem);
         }
+        // if you can't use the item then show dialog saying it won't have an affect
         else
         {
             if (selectedCat == (int)ItemCategory.Items)
                 yield return DialogManager.Instance.ShowDialogText($"This will not have any affect!");
         }
 
+        // close party screen
         ClosePartyScreen();
     }
 
+    // handles using the TM/HM item
     IEnumerator HandleTmItems()
     {
         var tmItem = inventory.GetItem(selected, selectedCat) as TmItem;
 
+        // make sure you have a TM first
         if (tmItem == null)
             yield break;
 
         var mon = party.SelectedMon;
 
+        // checks if the monmon already knows the move and can be caught the move
         if (mon.HasMove(tmItem.Move))
         {
             yield return DialogManager.Instance.ShowDialogText($"{mon.Basic.Name} already knows {tmItem.Move.Name}");
@@ -218,6 +243,8 @@ public class InventoryUI : MonoBehaviour
             yield break;
         }
 
+        // if the mon that is being taught has < 4 moves then just learn
+        // if not how the choose to forget, same as battle
         if (mon.Moves.Count < PokemonBasic.MaxNumOfMoves)
         {
             mon.LearnMove(tmItem.Move);
@@ -232,6 +259,7 @@ public class InventoryUI : MonoBehaviour
         }
     }
 
+    // Shows list a moves and pick one you want to forget
     IEnumerator ChooseMoveToForget(Pokemon pokemon, MoveBasic newMove)
     {
         state = InventoryUIState.Busy;
@@ -244,6 +272,8 @@ public class InventoryUI : MonoBehaviour
         state = InventoryUIState.MoveToForget;
     }
 
+    // when the item list is being used by the player and they move around using the arrow keys
+    // show what they have selected and clamp so they don't go out of bounds
     void UpdateItemSelect()
     {
         var slots = inventory.GetSlotsByCat(selectedCat);
@@ -267,6 +297,8 @@ public class InventoryUI : MonoBehaviour
         HandleScrolling();
     }
 
+    // handles the scrolling function and makes sure the items selected stay on the screen
+    // also controls if the player can see the up or down arrow in the UI
     void HandleScrolling()
     {
         if (slotUIList.Count <= itemsInView) return;
@@ -281,6 +313,7 @@ public class InventoryUI : MonoBehaviour
         downArrow.gameObject.SetActive(showDownArrow);
     }
 
+    // resets what is selected on the list to the first element when switching categories
     void ResetSelect()
     {
         selected = 0;
@@ -291,12 +324,15 @@ public class InventoryUI : MonoBehaviour
         itemDesc.text = "";
     }
 
+    // opens party screen
     void OpenPartyScreen()
     {
         state = InventoryUIState.PartySelect;
 
         party.gameObject.SetActive(true);
     }
+
+    // closes party scrren
     void ClosePartyScreen()
     {
         state = InventoryUIState.ItemSelect;
@@ -306,6 +342,8 @@ public class InventoryUI : MonoBehaviour
         party.gameObject.SetActive(false);
     }
 
+    // when you select a move to forget try to learn a new move
+    // or if you select the new move you did not learn a new move
     IEnumerator OnMoveToForgetSelect(int moveIndex)
     {
         var mon = party.SelectedMon;

@@ -12,6 +12,7 @@ public class LocationPortal : MonoBehaviour, IPlayerTriggerable
 
     PlayerController player;
 
+    // when the player triggers the protal teleport them
     public void OnPlayerTriggered(PlayerController player)
     {
         player.Character.Animator.IsMoving = false;
@@ -19,13 +20,18 @@ public class LocationPortal : MonoBehaviour, IPlayerTriggerable
         StartCoroutine(Teleport());
     }
 
+    public bool TriggerMulti => false;
+
     Fader fader;
 
+    // uses the fader to make the teleporting less jarring
     private void Start()
     {
         fader = FindObjectOfType<Fader>();
     }
 
+    // pauses you so you can't move during the teleport and gets the destination portal spawn point
+    // and telports you there
     IEnumerator Teleport()
     {
 

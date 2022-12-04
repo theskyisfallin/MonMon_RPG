@@ -5,6 +5,7 @@ using UnityEngine.UI;
 
 public class BattleBox : MonoBehaviour
 {
+    // user input from Unity
     [SerializeField] Text diaText;
     [SerializeField] int textSpeed;
     [SerializeField] GameObject actionSelector;
@@ -22,16 +23,19 @@ public class BattleBox : MonoBehaviour
 
     Color highlight;
 
+    // get text highlight color from global settings
     private void Start()
     {
         highlight = GlobalSettings.i.Hightlight;
     }
 
+    // setting the dialog for the battle dialog box
     public void SetDialog(string dialog)
     {
         diaText.text = dialog;
     }
 
+    // how I type out the dialog character by character to show the player
     public IEnumerator TypeDialog(string dialog)
     {
         diaText.text = "";
@@ -44,11 +48,13 @@ public class BattleBox : MonoBehaviour
         yield return new WaitForSeconds(1f);
     }
 
+    // if you need to enable dialog text it is done with this function
     public void EnableDialogText(bool enabled)
     {
         diaText.enabled = enabled;
     }
 
+    // enables which election you are in during battle
     public void EnableActionSelector(bool enabled)
     {
         actionSelector.SetActive(enabled);
@@ -65,6 +71,7 @@ public class BattleBox : MonoBehaviour
         choiceBox.SetActive(enabled);
     }
 
+    // updates what the player is on and highlights it for all the Update____ functions
     public void UpdateActionSelection(int selectedAction)
     {
         for (int i = 0; i < actionText.Count; i++)
@@ -109,6 +116,8 @@ public class BattleBox : MonoBehaviour
         }
     }
 
+    // Sets the move names in the players list
+    // if you don't have 4 moves just show - where you don't have one
     public void SetMoveNames(List<Move> moves)
     {
         for (int i = 0; i < moveText.Count; i++)

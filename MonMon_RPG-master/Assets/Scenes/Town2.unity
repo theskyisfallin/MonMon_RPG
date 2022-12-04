@@ -892,6 +892,7 @@ MonoBehaviour:
     - ...
   pattern: []
   timeBetweenPattern: 0
+  quest: {fileID: 0}
 --- !u!61 &354510046
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -1162,6 +1163,7 @@ MonoBehaviour:
   - {x: 2, y: 0}
   - {x: -2, y: 0}
   timeBetweenPattern: 3
+  quest: {fileID: 0}
 --- !u!114 &736217837
 MonoBehaviour:
   m_ObjectHideFlags: 0

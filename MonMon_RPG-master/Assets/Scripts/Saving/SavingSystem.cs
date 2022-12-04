@@ -34,18 +34,22 @@ public class SavingSystem : MonoBehaviour
         }
     }
 
+    // saves your file
     public void Save(string saveFile)
     {
         CaptureState(gameState);
         SaveFile(saveFile, gameState);
     }
 
+    // loads your file
     public void Load(string saveFile)
     {
         gameState = LoadFile(saveFile);
         RestoreState(gameState);
     }
 
+    // deletes your file
+    // not used but was easy to add possibly in the future
     public void Delete(string saveFile)
     {
         File.Delete(GetPath(saveFile));
@@ -71,6 +75,14 @@ public class SavingSystem : MonoBehaviour
         }
     }
 
+    // restores saved entity
+    public void RestoreEntity(SavableEntity entity)
+    {
+        if (gameState.ContainsKey(entity.UniqueId))
+            entity.RestoreState(gameState[entity.UniqueId]);
+    }
+
+    // saves file to path and shows file path
     void SaveFile(string saveFile, Dictionary<string, object> state)
     {
         string path = GetPath(saveFile);
@@ -78,12 +90,13 @@ public class SavingSystem : MonoBehaviour
 
         using (FileStream fs = File.Open(path, FileMode.Create))
         {
-            // Serialize our object
+            // Serialize object
             BinaryFormatter binaryFormatter = new BinaryFormatter();
             binaryFormatter.Serialize(fs, state);
         }
     }
 
+    // loads file at path
     Dictionary<string, object> LoadFile(string saveFile)
     {
         string path = GetPath(saveFile);
@@ -92,12 +105,13 @@ public class SavingSystem : MonoBehaviour
 
         using (FileStream fs = File.Open(path, FileMode.Open))
         {
-            // Deserialize our object
+            // Deserialize object
             BinaryFormatter binaryFormatter = new BinaryFormatter();
             return (Dictionary<string, object>)binaryFormatter.Deserialize(fs);
         }
     }
 
+    // shows path used
     private string GetPath(string saveFile)
     {
         return Path.Combine(Application.persistentDataPath, saveFile);

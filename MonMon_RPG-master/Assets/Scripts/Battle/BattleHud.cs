@@ -6,6 +6,7 @@ using DG.Tweening;
 
 public class BattleHud : MonoBehaviour
 {
+    // user input set in unity
     [SerializeField] Text name;
     [SerializeField] Text level;
     [SerializeField] Text status;
@@ -20,8 +21,11 @@ public class BattleHud : MonoBehaviour
 
     Pokemon mon;
 
+    // using a dictonary for statuses and the color they have
     Dictionary<ConditionID, Color> statusColor;
 
+    // sets the battle hud at the start of a battle
+    // health, level, the mons, exp, and condition
     public void SetHud(Pokemon pokemon)
     {
         if (mon != null)
@@ -49,6 +53,7 @@ public class BattleHud : MonoBehaviour
         mon.OnHpChange += UpdateHp;
     }
 
+    // if you don't have a condition don't show if you do show that
     void SetStatusText()
     {
         if(mon.Status == null)
@@ -62,11 +67,13 @@ public class BattleHud : MonoBehaviour
         }
     }
 
+    // sets level of the current mon
     public void SetLevel()
     {
         level.text = "Lv. " + mon.Level;
     }
 
+    // sets exp of the current mon on a normalized scale
     public void SetExp()
     {
         if (expBar == null) return;
@@ -76,6 +83,7 @@ public class BattleHud : MonoBehaviour
         expBar.transform.localScale = new Vector3(normalExp, 1, 1);
     }
 
+    // normalizes the exp scale
     float GetNormalExp()
     {
         int currLevelExp = mon.Basic.GetExpForLevel(mon.Level);
@@ -86,6 +94,7 @@ public class BattleHud : MonoBehaviour
         return Mathf.Clamp01(normalExp);
     }
 
+    // shows the animation when gaining exp
     public IEnumerator SetExpTick(bool reset=false)
     {
         if (expBar == null) yield break;
@@ -97,22 +106,25 @@ public class BattleHud : MonoBehaviour
 
         yield return expBar.transform.DOScaleX(normalExp, 1.5f).WaitForCompletion();
     }
-
+    // update Hp
     public void UpdateHp()
     {
         StartCoroutine(UpdateHpAsync());
     }
 
+    // show the hp going down over time not just instantly
     public IEnumerator UpdateHpAsync()
     {
         yield return hp.tickHp((float)mon.currentHp / mon.MaxHp);
     }
 
+    // waiting for updates
     public IEnumerator WaitForHpUpdate()
     {
         yield return new WaitUntil(() => hp.IsUpdating == false);
     }
 
+    // clear the data if needed
     public void ClearData()
     {
         if (mon != null)

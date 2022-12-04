@@ -6,18 +6,23 @@ using UnityEngine;
 [CreateAssetMenu(menuName = "Items/Create new recovery item")]
 public class Recovery : ItemBase
 {
+    // sets what fields the item has and what they recover
+    // Hp
     [Header("HP")]
     [SerializeField] int hpAmount;
     [SerializeField] bool restoreMaxHp;
 
+    // Power points
     [Header("PP")]
     [SerializeField] int ppAmount;
     [SerializeField] bool restoreMaxPP;
 
+    // statuses
     [Header("Status")]
     [SerializeField] ConditionID status;
     [SerializeField] bool recoverAll;
 
+    // fainted
     [Header("Fainted")]
     [SerializeField] bool revive;
     [SerializeField] bool maxRevive;

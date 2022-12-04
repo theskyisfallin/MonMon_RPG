@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
+// while I technically call this a data base it is not but it is a dictionary that holds my conditions
 public class ConditionsDB
 {
+    // inits the keys and values pair in my dictonary
     public static void Init()
     {
         foreach(var kvp in Conditions)
@@ -16,6 +18,7 @@ public class ConditionsDB
         }
     }
 
+    // shows the conditon, what it does, it's message, and it's name
     public static Dictionary<ConditionID, Condition> Conditions { get; set; } = new Dictionary<ConditionID, Condition>()
     {
         {
@@ -105,6 +108,7 @@ public class ConditionsDB
                 }
             }
         },
+        // these are the dynamic statuses, similar to sleep but doesn't save on switch out or battle end
         {
             ConditionID.confusion, new Condition()
             {
@@ -141,6 +145,7 @@ public class ConditionsDB
         }
     };
 
+    // modifies catach rate if the wild monmon has a status
     public static float GetStatusBonus(Condition condition)
     {
         if (condition == null)
@@ -155,6 +160,7 @@ public class ConditionsDB
     }
 }
 
+// which status the monmon has
 public enum ConditionID
 {
     none, psn, brn, slp, par, frz, confusion

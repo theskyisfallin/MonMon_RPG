@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fa6f1420f52e848388b0493a6f572f33, type: 3}
+  m_Name: NeedMonBall
+  m_EditorClassIdentifier: 
+  name: NeedMonBall
+  desc: 
+  startDia:
+    lines:
+    - I really want to catch a MonMon but I don't have a Mon Ball
+    - If you bring me one I'll give you a reward
+  midDia:
+    lines:
+    - Have you found a Mon Ball for me yet?
+  endDia:
+    lines:
+    - Wow thanks! You can have this now!
+  requiredItem: {fileID: 11400000, guid: a9904d782cee8425da575354bf3c3ad8, type: 2}
+  rewardItem: {fileID: 11400000, guid: de9ca8255343f4f37a8f61d1c201067e, type: 2}

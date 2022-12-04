@@ -4,6 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+// gets the scene details and when to load them
 public class SceneDetails : MonoBehaviour
 {
     [SerializeField] List<SceneDetails> connectedScenes;
@@ -12,6 +13,8 @@ public class SceneDetails : MonoBehaviour
 
     List<SavableEntity> savableEntities;
 
+    // when the player enters a new area put it in the log and
+    // if a scene is connected then load the connected scenes
     private void OnTriggerEnter2D(Collider2D collison)
     {
         if (collison.tag == "Player")
@@ -25,7 +28,8 @@ public class SceneDetails : MonoBehaviour
             {
                 scene.LoadScene();
             }
-
+            // checks what scenes were previously loaded
+            // if you don't need those scenes anymore they are unloaded
             var prevScene = GameControl.Instance.PrevScene;
             if (GameControl.Instance.PrevScene != null)
             {
@@ -43,6 +47,7 @@ public class SceneDetails : MonoBehaviour
         }
     }
 
+    // handles the loading of the scenes
     public void LoadScene()
     {
         if (!IsLoaded)
@@ -58,6 +63,7 @@ public class SceneDetails : MonoBehaviour
         }
     }
 
+    // handles the unloading of scenes
     public void UnloadScene()
     {
         if (IsLoaded)
@@ -69,6 +75,7 @@ public class SceneDetails : MonoBehaviour
         }
     }
 
+    // gets teh savable entiteis in the scenes so they can be saved in the right scenes
     List<SavableEntity> GetSavableEntitiesInScene()
     {
         var currScene = SceneManager.GetSceneByName(gameObject.name);

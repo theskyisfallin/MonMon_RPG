@@ -4,10 +4,12 @@ using UnityEngine;
 
 public class CharacterAnimator : MonoBehaviour
 {
+    // user input from Unity needs sprites for animations
     [SerializeField] List<Sprite> walkDownSprites;
     [SerializeField] List<Sprite> walkUpSprites;
     [SerializeField] List<Sprite> walkRightSprites;
     [SerializeField] List<Sprite> walkLeftSprites;
+    // default direction a character faces, usually down but can be changed
     [SerializeField] FacingDirection defaultDirection = FacingDirection.Down;
 
     public float MoveX { get; set; }
@@ -24,6 +26,7 @@ public class CharacterAnimator : MonoBehaviour
 
     SpriteRenderer spriteRenderer;
 
+    // renders all the sprites for the characters
     private void Start()
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -36,6 +39,7 @@ public class CharacterAnimator : MonoBehaviour
         currentAnim = walkDownAnim;
     }
 
+    // plays the animaion when a character is moveing/updating
     private void Update()
     {
         var prevAnim = currentAnim;
@@ -61,6 +65,8 @@ public class CharacterAnimator : MonoBehaviour
         wasPrevMoving = IsMoving;
     }
 
+    // set what direction you are facing, if this wasn't here
+    // as soon as you stopped you'd snap to look in the default direction
     public void SetFacingDirection(FacingDirection dir)
     {
         if (dir == FacingDirection.Right)

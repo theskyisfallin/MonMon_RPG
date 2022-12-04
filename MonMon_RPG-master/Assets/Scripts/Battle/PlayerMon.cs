@@ -33,6 +33,7 @@ public class PlayerMon : MonoBehaviour
 
     Color orginalCol;
 
+    // gets player mon and sets the image back to normal if it was changed before
     private void Awake()
     {
         image = GetComponent<Image>();
@@ -40,6 +41,7 @@ public class PlayerMon : MonoBehaviour
         orginalCol = image.color;
     }
 
+    // shows the back sprite for the player and front sprite for the enemy monmon
     public void Setup(Pokemon mon)
     {
         Pokemon = mon;
@@ -48,19 +50,23 @@ public class PlayerMon : MonoBehaviour
         else
             image.sprite = Pokemon.Basic.Front;
 
+        // sets your hud
         hud.gameObject.SetActive(true);
         hud.SetHud(mon);
 
+        // plays enter animation
         transform.localScale = new Vector3(1, 1, 1);
         image.color = orginalCol;
         EnterAnimation();
     }
 
+    // if needing to clear the hud this is how
     public void Clear()
     {
         hud.gameObject.SetActive(false);
     }
 
+    // plays the enter animation
     public void EnterAnimation()
     {
         if (isPlayer)
@@ -71,6 +77,7 @@ public class PlayerMon : MonoBehaviour
         image.transform.DOLocalMoveX(orginalPos.x, 1f);
     }
 
+    // plays the attack animation
     public void AttackAnimation()
     {
         var sequence = DOTween.Sequence();
@@ -82,6 +89,7 @@ public class PlayerMon : MonoBehaviour
         sequence.Append(image.transform.DOLocalMoveX(orginalPos.x, 0.25f));
     }
 
+    // plays the hit animation
     public void HitAnimation()
     {
         var sequence = DOTween.Sequence();
@@ -89,6 +97,7 @@ public class PlayerMon : MonoBehaviour
         sequence.Append(image.DOColor(orginalCol, 0.1f));
     }
 
+    // plays the animation if you faint
     public void FaintAnimation()
     {
         var sequence = DOTween.Sequence();
@@ -96,6 +105,7 @@ public class PlayerMon : MonoBehaviour
         sequence.Join(image.DOFade(0f, 0.5f));
     }
 
+    // plays the capture animaiton
     public IEnumerator CaptureAnimation()
     {
         var sequence = DOTween.Sequence();
@@ -105,6 +115,7 @@ public class PlayerMon : MonoBehaviour
         yield return sequence.WaitForCompletion();
     }
 
+    // if you fail to capture plays the break out animation
     public IEnumerator BreakOutAnimation()
     {
         var sequence = DOTween.Sequence();

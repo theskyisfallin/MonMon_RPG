@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+// handles the sprite animations
 public class SpriteAnimator
 {
     SpriteRenderer spriteRenderer;

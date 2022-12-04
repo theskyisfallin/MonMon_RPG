@@ -8,6 +8,7 @@ public class PartyScreen : MonoBehaviour
 {
     [SerializeField] Text message;
 
+    // get a list of members and mons for the party
     PartyMonUI[] members;
 
     List<Pokemon> mons;
@@ -17,9 +18,10 @@ public class PartyScreen : MonoBehaviour
 
     public Pokemon SelectedMon => mons[selected];
 
-
+    // get where this function is called from
     public BattleState? CalledFrom { get; set; }
 
+    // init the players party
     public void Init()
     {
         members = GetComponentsInChildren<PartyMonUI>(true);
@@ -29,11 +31,13 @@ public class PartyScreen : MonoBehaviour
         party.OnUpdated += SetPartyData;
     }
 
+    // set the party's data 
     public void SetPartyData()
     {
 
         mons = party.Pokemon;
 
+        // to not show the default in make sure to SetActive to false if it's > the players current party mons
         for (int i = 0; i < members.Length; i++)
         {
             if (i < mons.Count)
@@ -49,6 +53,7 @@ public class PartyScreen : MonoBehaviour
         message.text = "Choose a MonMon";
     }
 
+    // handle the selction and invoke on select and on back if needed
     public void HandleUpdate(Action onSelect, Action onBack)
     {
         var prevSelection = selected;
@@ -77,6 +82,7 @@ public class PartyScreen : MonoBehaviour
         }
     }
 
+    // show which mon is selected
     public void UpdateMonSelection(int selected)
     {
         for(int i = 0; i < mons.Count; i++)
@@ -88,6 +94,7 @@ public class PartyScreen : MonoBehaviour
         }
     }
 
+    // show if a Tm item is usuable on the party mons
     public void ShowIfTmIsUsable(TmItem tmItem)
     {
         for (int i = 0; i < mons.Count; i++)
@@ -97,6 +104,7 @@ public class PartyScreen : MonoBehaviour
         }
     }
 
+    // clears the message
     public void ClearMemberSlotMessages()
     {
         for (int i = 0; i < mons.Count; i++)
@@ -105,6 +113,7 @@ public class PartyScreen : MonoBehaviour
         }
     }
 
+    // sets the message
     public void SetMessage(string message)
     {
         this.message.text = message;

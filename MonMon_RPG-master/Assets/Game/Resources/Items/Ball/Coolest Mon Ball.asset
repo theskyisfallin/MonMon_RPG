@@ -15,4 +15,4 @@ MonoBehaviour:
   name: Coolest Mon Ball
   desc: The best Mon Ball!
   icon: {fileID: 1196982655, guid: 31bc68446d0374438bb14409cab30a55, type: 3}
-  catchRateModifer: 100
+  catchRateModifer: 10000

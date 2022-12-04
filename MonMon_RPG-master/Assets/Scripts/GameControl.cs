@@ -7,13 +7,14 @@ public enum GameState { Free, Battle, Dialog, Menu, Party, Bag, Cutscene, Paused
 
 public class GameControl : MonoBehaviour
 {
+    // user input for contorllers, battle, world camera, party, and inventory from Unity
     [SerializeField] PlayerController playerController;
     [SerializeField] Battle battle;
     [SerializeField] Camera worldCam;
     [SerializeField] PartyScreen party;
     [SerializeField] InventoryUI inventory;
 
-
+    // gets game states
     GameState state;
 
     GameState prevState;
@@ -24,6 +25,7 @@ public class GameControl : MonoBehaviour
 
     public static GameControl Instance { get; private set; }
 
+    // on awake set this code sets all "DB"s, disables the cursor and gets the menu controller
     public void Awake()
     {
         Instance = this;
@@ -35,8 +37,11 @@ public class GameControl : MonoBehaviour
         PokemonDB.Init();
         MoveDB.Init();
         ConditionsDB.Init();
+        ItemDB.Init();
+        QuestDB.Init();
     }
 
+    // on stat run the code to init the party and subscribe to multiple Actions
     private void Start()
     {
         battle.OnBattleOver += EndBattle;
@@ -49,7 +54,7 @@ public class GameControl : MonoBehaviour
             state = GameState.Dialog;
         };
 
-        DialogManager.Instance.OnCloseDialog += () =>
+        DialogManager.Instance.OnDialogEnd += () =>
         {
             if(state == GameState.Dialog)
                 state = prevState;
@@ -63,6 +68,7 @@ public class GameControl : MonoBehaviour
         menuController.onMenuSelect += OnMenuSelect;
     }
 
+    // pause game so you can't move around during battles and such
     public void PauseGame(bool pause)
     {
         if (pause)
@@ -76,6 +82,7 @@ public class GameControl : MonoBehaviour
         }
     }
 
+    // start wild battle, gets the player party, sets up the right cams, and gets a random wild mon for the area
     public void StartBattle()
     {
         state = GameState.Battle;
@@ -92,6 +99,7 @@ public class GameControl : MonoBehaviour
 
     TrainerController trainer;
 
+    // start trainer battle, sets state, gets parties of both characters and starts battle
     public void StartTrainerBattle(TrainerController trainer)
     {
         state = GameState.Battle;
@@ -105,12 +113,14 @@ public class GameControl : MonoBehaviour
         battle.StartTrainerBattle(playerParty, trainerParty);
     }
 
+    // checks if you enter a trainers fov and sets the state as cutscene so the npc can move but you can't
     public void OnEnterTrainersView(TrainerController trainer)
     {
         state = GameState.Cutscene;
         StartCoroutine(trainer.TriggerTrainerBattle(playerController));
     }
 
+    // ending the battle and sets you back to a free state
     void EndBattle(bool won)
     {
         if (trainer != null && won == true)
@@ -125,6 +135,7 @@ public class GameControl : MonoBehaviour
         worldCam.gameObject.SetActive(true);
     }
 
+    // updates which state the game is in in the overworld
     private void Update()
     {
         if(state == GameState.Free)
@@ -153,7 +164,7 @@ public class GameControl : MonoBehaviour
         {
             Action onSelected = () =>
             {
-
+                // TODO: add in status screen to you can see your monmons outside of battle
             };
             Action onBack = () =>
             {
@@ -173,11 +184,14 @@ public class GameControl : MonoBehaviour
         }
     }
 
+    // sets the current scene the player is in
     public void SetCurrentScene(SceneDetails currScene)
     {
         PrevScene = CurrentScene;
         CurrentScene = currScene;
     }
+
+    // changes the states the player selects from the menu
 
     void OnMenuSelect(int selected)
     {
@@ -195,7 +209,7 @@ public class GameControl : MonoBehaviour
         }
         else if (selected == 2)
         {
-            //Save
+            //Save and what the file is named
             SavingSystem.i.Save("save1");
             state = GameState.Free;
         }

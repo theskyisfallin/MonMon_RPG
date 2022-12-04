@@ -7,11 +7,13 @@ using Random = UnityEngine.Random;
 using DG.Tweening;
 using System.Linq;
 
+// Need to know what state the battle is in or what action is selected during battle thus BattleState and BattleAction
 public enum BattleState { Start, ActionSelect, MoveSelect, RunningTurn, Busy, Bag, AboutToUse, PartyScreen, MoveToForget, BattleOver }
 public enum BattleAction { Move, SwitchPokemon, UseItem, Run }
 
 public class Battle : MonoBehaviour
 {
+    // Fields the user can input from Unity itself [SerializeField] are user input fields
     [SerializeField] PlayerMon playerMon;
     [SerializeField] PlayerMon enemyMon;
     [SerializeField] BattleBox dialogBox;
@@ -22,8 +24,10 @@ public class Battle : MonoBehaviour
     [SerializeField] MoveSelectUI moveSelect;
     [SerializeField] InventoryUI inventoryUI;
 
+    // Action var
     public event Action<bool> OnBattleOver;
 
+    // var to save state
     BattleState state;
     
 
@@ -32,6 +36,7 @@ public class Battle : MonoBehaviour
 
     bool aboutToUseChoice = true;
 
+    // init parties and wild mon
     Party playerParty;
     Party trainerParty;
     Pokemon wildMon;
@@ -44,6 +49,7 @@ public class Battle : MonoBehaviour
     int escapeAttempts;
     MoveBasic moveToLearn;
 
+    // Starting a wild battle needs a player part and wild mon then calls SetupBattle
     public void StartBattle(Party playerParty, Pokemon wildMon)
     {
         isTrainerBattle = false;
@@ -54,6 +60,7 @@ public class Battle : MonoBehaviour
         StartCoroutine(SetupBattle());
     }
 
+    // Does basically the same as wild battles but needs trainer party and different contorller
     public void StartTrainerBattle(Party playerParty, Party trainerParty)
     {
         
@@ -67,11 +74,14 @@ public class Battle : MonoBehaviour
         StartCoroutine(SetupBattle());
     }
 
+    // Sets up the battle
     public IEnumerator SetupBattle()
     {
+        // clears Mons from last battle if you had one so they don't overlay
         playerMon.Clear();
         enemyMon.Clear();
 
+        // if it is a wild battle show the mon and text
         if (!isTrainerBattle)
         {
             playerMon.Setup(playerParty.GetNotFaintedMon());
@@ -81,8 +91,10 @@ public class Battle : MonoBehaviour
 
             yield return dialogBox.TypeDialog($"A wild {enemyMon.Pokemon.Basic.Name} appeared!");
         }
+        // Trainer battles
         else
         {
+            // do not show the monmon but instead the trainers and then the monmon after
             playerMon.gameObject.SetActive(false);
             enemyMon.gameObject.SetActive(false);
 
@@ -92,15 +104,19 @@ public class Battle : MonoBehaviour
             playerImage.sprite = player.Sprite;
             trainerImage.sprite = trainer.Sprite;
 
-            yield return dialogBox.TypeDialog($"{trainer.Name} is trying to mug you");
+            yield return dialogBox.TypeDialog($"{trainer.Name} is trying to battle you");
 
             trainerImage.gameObject.SetActive(false);
             enemyMon.gameObject.SetActive(true);
 
+            // trainers will never have a fainted mon in their party if you haven't battled them before
+            // that said we use the same method for the players party so needs to be called here
+            // to send out their first monmon
             var enemyPokemon = trainerParty.GetNotFaintedMon();
             enemyMon.Setup(enemyPokemon);
             yield return dialogBox.TypeDialog($"{trainer.Name} sent out {enemyPokemon.Basic.Name}");
 
+            // sends out players first non-fainted monomon
             playerImage.gameObject.SetActive(false);
             playerMon.gameObject.SetActive(true);
             var playerPokemon = playerParty.GetNotFaintedMon();
@@ -109,13 +125,20 @@ public class Battle : MonoBehaviour
             dialogBox.SetMoveNames(playerMon.Pokemon.Moves);
 
         }
+        // sets escapeAttemps to 0
+        // the more attempts you make the higher chance you have for escaping
         escapeAttempts = 0;
 
+        // init party screen
         partyScreen.Init();
 
+        // go into action selection
         ActionSelect();
     }
 
+    // when battle is either won or lost: set state
+    // clear everything
+    // call OnBattleOver and pass the bool
     void BattleOver(bool won)
     {
         state = BattleState.BattleOver;
@@ -125,6 +148,7 @@ public class Battle : MonoBehaviour
         OnBattleOver(won);
     }
 
+    // player needs to choose an action, don't show moves
     void ActionSelect()
     {
         state = BattleState.ActionSelect;
@@ -134,12 +158,16 @@ public class Battle : MonoBehaviour
 
     }
 
+    // state is in teh bag and calls the inventoryUI gameObject
     void OpenBag()
     {
         state = BattleState.Bag;
         inventoryUI.gameObject.SetActive(true);
     }
 
+    // because party can be opened in and outside of battle you need the
+    // partyScreen.CalledFrom = state to know where it is called from
+    // state is set to party screen and the gameObject is set to active
     void OpenParty()
     {
         partyScreen.CalledFrom = state;
@@ -148,6 +176,7 @@ public class Battle : MonoBehaviour
 
     }
 
+    // Show moves in the player's dialog box
     void MoveSelect()
     {
         state = BattleState.MoveSelect;
@@ -156,6 +185,9 @@ public class Battle : MonoBehaviour
         dialogBox.EnableMoveSelector(true);
     }
 
+    // when fainting a trainers monmon they will say who they are about to use and the player can
+    // choose to either say in or switch to another monmon
+    // busy is an important state, basically just removes player control until the state is changed
     IEnumerator AboutToUse(Pokemon newMon)
     {
         state = BattleState.Busy;
@@ -165,6 +197,8 @@ public class Battle : MonoBehaviour
         dialogBox.EnableChoiceBox(true);
     }
 
+    // when a monmon already knows 4 moves and tries to learn another
+    // this willl pop up and show your move list
     IEnumerator ChooseMoveToForget(Pokemon pokemon, MoveBasic newMove)
     {
         state = BattleState.Busy;
@@ -177,19 +211,22 @@ public class Battle : MonoBehaviour
         state = BattleState.MoveToForget;
     }
 
+    // This funciton handles the running of turns during battles
     IEnumerator RunTurns(BattleAction playerAction)
     {
         state = BattleState.RunningTurn;
 
+        // player chooses to use a move
         if (playerAction == BattleAction.Move)
         {
+            // gets what move the player chose and enemy picks a random move
             playerMon.Pokemon.CurrentMove = playerMon.Pokemon.Moves[currentMove];
             enemyMon.Pokemon.CurrentMove = enemyMon.Pokemon.randomMove();
 
             int playerMovePriority = playerMon.Pokemon.CurrentMove.Base.Priority;
             int enemyMovePriority = enemyMon.Pokemon.CurrentMove.Base.Priority;
 
-            //check priortiy
+            // check priortiy to see if one used a move with a higher prioity
             bool playerGoesFirst = true;
 
             if (enemyMovePriority > playerMovePriority)
@@ -197,17 +234,18 @@ public class Battle : MonoBehaviour
             else if (enemyMovePriority == playerMovePriority)
                 playerGoesFirst = playerMon.Pokemon.Speed >= enemyMon.Pokemon.Speed;
 
-
+            // based on speed picks which monmon goes first
             var firstMon = (playerGoesFirst) ? playerMon : enemyMon;
             var secondMon = (playerGoesFirst) ? enemyMon : playerMon;
 
             var secondPokemon = secondMon.Pokemon;
 
+            // run move and any after turn effects
             yield return RunMove(firstMon, secondMon, firstMon.Pokemon.CurrentMove);
             yield return RunAfterTurn(firstMon);
             if (state == BattleState.BattleOver) yield break;
 
-
+            // if the second monmon didn't faint run their move and after turn effects
             if (secondPokemon.currentHp > 0)
             {
                 yield return RunMove(secondMon, firstMon, secondMon.Pokemon.CurrentMove);
@@ -217,36 +255,46 @@ public class Battle : MonoBehaviour
         }
         else
         {
+            // if player choose to switch monmon
+            // note: the word "pokemon" was attempted to remove but caused so many errors
+            //       I did not think it was worth it
             if (playerAction == BattleAction.SwitchPokemon)
             {
+                // pull up party screen and call SwitchMon
                 var selectedPokemon = partyScreen.SelectedMon;
                 state = BattleState.Busy;
                 yield return SwitchMon(selectedPokemon);
             }
+            // if player uses an item
             else if (playerAction == BattleAction.UseItem)
             {
                 // handled from item screen
                 dialogBox.EnableActionSelector(false);
             }
+            // if player tries to run call TryToEscape
             else if (playerAction == BattleAction.Run)
             {
                 yield return TryToEscape();
             }
 
+            // after you use one of these the enemy monmon goes as this counts as your turn
             var enemyMove = enemyMon.Pokemon.randomMove();
             yield return RunMove(enemyMon, playerMon, enemyMove);
             yield return RunAfterTurn(enemyMon);
             if (state == BattleState.BattleOver) yield break;
         }
-
+        // if the battle didn't end go back to ActionSelect and keep running
         if (state != BattleState.BattleOver)
             ActionSelect();
     }
 
+    // Running moves of each of the monmon
     IEnumerator RunMove(PlayerMon source, PlayerMon target, Move move)
     {
-
+        // checks for statuses before moves such as par and confusion/sleep to see if
+        // the source monmon can move
         bool canMove = source.Pokemon.OnBeforeMove();
+        // if you can't move show why
         if (!canMove)
         {
             yield return ShowStatChange(source.Pokemon);
@@ -255,24 +303,24 @@ public class Battle : MonoBehaviour
         }
         yield return ShowStatChange(source.Pokemon);
 
-
+        // remove power points from the source monmon and show what move they used
         move.Pp--;
         yield return dialogBox.TypeDialog($"{source.Pokemon.Basic.Name} used {move.Base.Name}");
 
-
+        // checkIfMoveHits for accuracy and if it does run move
         if (CheckIfMoveHits(move, source.Pokemon, target.Pokemon))
         {
-
-
+            // show animations
             source.AttackAnimation();
             yield return new WaitForSeconds(1f);
             target.HitAnimation();
 
-
+            // if the move is a status move run the move effects
             if (move.Base.Category == Category.Status)
             {
                 yield return RunMoveEffects(move.Base.Effects, source.Pokemon, target.Pokemon, move.Base.Target);
             }
+            // target takes damage from the move and source and shows viusal feedback
             else
             {
                 var damageDets = target.Pokemon.TakeDamage(move, source.Pokemon);
@@ -280,29 +328,31 @@ public class Battle : MonoBehaviour
 
                 yield return ShowDamageDets(damageDets);
             }
-
+            // check if the move used has secondary effects
             if(move.Base.Secondaries != null && move.Base.Secondaries.Count > 0 && target.Pokemon.currentHp > 0)
             {
                 foreach (var seconday in move.Base.Secondaries)
                 {
+                    // the chance for it to happen and roll and random number for the effect to proc
                     var rand = UnityEngine.Random.Range(1, 101);
                     if(rand <= seconday.Chance)
                         yield return RunMoveEffects(seconday, source.Pokemon, target.Pokemon, seconday.Target);
                 }
             }
-
+            // if the target faints handle this
             if (target.Pokemon.currentHp <= 0)
             {
                 yield return HandlePokemonFainted(target);
             }
         }
-
+        // if you missed earlier show that this move missed
         else
         {
             yield return dialogBox.TypeDialog($"{source.Pokemon.Basic.Name}'s move missed");
         }
     }
 
+    // if the move has effects such as stat boosts or statuses it is handled here
     IEnumerator RunMoveEffects(MoveEffects effects, Pokemon source, Pokemon target, Target moveTarget)
     {
         // Stat boost
@@ -330,8 +380,10 @@ public class Battle : MonoBehaviour
         yield return ShowStatChange(target);
     }
 
+    // if a status does damage or something else after the turn it is run here
     IEnumerator RunAfterTurn(PlayerMon source)
     {
+        // battle needs to not be over
         if (state == BattleState.BattleOver) yield break;
 
         yield return new WaitUntil(() => state == BattleState.RunningTurn);
@@ -348,7 +400,7 @@ public class Battle : MonoBehaviour
         }
     }
 
-
+    // shows status changes the the dialog box
     IEnumerator ShowStatChange(Pokemon pokemon)
     {
         while (pokemon.StatusChanges.Count > 0)
@@ -358,14 +410,16 @@ public class Battle : MonoBehaviour
         }
     }
 
-
+    // if a monmon faints this function is called
     IEnumerator HandlePokemonFainted(PlayerMon faintedMon)
     {
+        // shows the fainted animation and dialog
         yield return dialogBox.TypeDialog($"{faintedMon.Pokemon.Basic.Name} Fainted");
         faintedMon.FaintAnimation();
 
         yield return new WaitForSeconds(2f);
 
+        // if it not the player give the player exp and calculate that
         if (!faintedMon.IsPlayer)
         {
             int expYield = faintedMon.Pokemon.Basic.ExpYield;
@@ -380,23 +434,27 @@ public class Battle : MonoBehaviour
 
             yield return playerMon.Hud.SetExpTick();
 
-
+            // checks if the player monmon leveled duriong the handling of fainting
             while (playerMon.Pokemon.CheckForLevelUp())
             {
+                // shows the level update and what level they go to
                 playerMon.Hud.SetLevel();
                 yield return dialogBox.TypeDialog($"{playerMon.Pokemon.Basic.Name} grew to level {playerMon.Pokemon.Level}");
 
-
+                // if the monmon is trying to learn a new move and their new level
                 var newMove = playerMon.Pokemon.GetLearnableMoveAtCurrent();
 
+                // if newMove is not null try to learn it
                 if (newMove != null)
                 {
+                    // if the monmon doesn't already know 4 moves just learn it without anything else
                     if (playerMon.Pokemon.Moves.Count < PokemonBasic.MaxNumOfMoves)
                     {
                         playerMon.Pokemon.LearnMove(newMove.Base);
                         yield return dialogBox.TypeDialog($"{playerMon.Pokemon.Basic.Name} learned {newMove.Base.Name}");
                         dialogBox.SetMoveNames(playerMon.Pokemon.Moves);
                     }
+                    // if they know 4 moves player has to choose a move to forget
                     else
                     {
                         yield return dialogBox.TypeDialog($"{playerMon.Pokemon.Basic.Name} is trying to learn {newMove.Base.Name}");
@@ -414,12 +472,15 @@ public class Battle : MonoBehaviour
             yield return new WaitForSeconds(1f);
         }
 
+        // call CheckBattle to see the state of the battle
         CheckBattle(faintedMon);
     }
 
-
+    // checks the battle if a monmon faints
     void CheckBattle(PlayerMon fainted)
     {
+        // if it's the player pull up their party or lose the battle if they are out of useable mons
+        // right now if you lose nothing changes but all your monmons are fainted
         if (fainted.IsPlayer)
         {
             var nextMon = playerParty.GetNotFaintedMon();
@@ -429,12 +490,16 @@ public class Battle : MonoBehaviour
             else 
                 BattleOver(false);
         }
+        // checks if it is wild or trainer battle
         else
         {
+            // wild battle, battle ends
             if (!isTrainerBattle)
             {
                 BattleOver(true);
             }
+            // trainer battle, if they can use their next mon call AboutToUse if they have no more healthy monmons
+            // end battle
             else
             {
                 var nextMon = trainerParty.GetNotFaintedMon();
@@ -446,6 +511,7 @@ public class Battle : MonoBehaviour
         }
     }
 
+    // checks accuracy of the move and if it hits
     bool CheckIfMoveHits(Move move, Pokemon source, Pokemon target)
     {
         if (move.Base.CantMiss)
@@ -471,7 +537,7 @@ public class Battle : MonoBehaviour
         return UnityEngine.Random.Range(1, 101) <= moveAcc;
     }
 
-
+    // shows damage detals such as super effective, not very effective, and crits
     IEnumerator ShowDamageDets(DamageDets damageDets)
     {
         if (damageDets.Crit > 1f)
@@ -482,6 +548,7 @@ public class Battle : MonoBehaviour
             yield return dialogBox.TypeDialog("It's not very effecitve.");
     }
 
+    // handles all updates during the battle system
     public void HandleUpdate()
     {
         if (state == BattleState.ActionSelect)
@@ -500,6 +567,7 @@ public class Battle : MonoBehaviour
         {
             HandleAboutToUse();
         }
+        // you can back out of these and not use your turn so using an action for that
         else if (state == BattleState.Bag)
         {
             Action onBack = () =>
@@ -512,9 +580,10 @@ public class Battle : MonoBehaviour
             {
                 StartCoroutine(OnItemUsed(usedItem));
             };
-
+            // handled in InventoryUI script
             inventoryUI.HandleUpdate(onBack, onItemUsed);
         }
+        // trying to learn a new move if monmon has more than 4 moves already
         else if (state == BattleState.MoveToForget)
         {
             Action<int> onMoveSelected = (moveIndex) =>
@@ -540,6 +609,7 @@ public class Battle : MonoBehaviour
         }
     }
 
+    // shows visual feed back on what the user has selected and what they choose
     void HandleActionSelection()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
@@ -551,6 +621,8 @@ public class Battle : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.UpArrow))
             currentAction -= 2;
 
+        // so they can't go below index 1 and above index 3
+        // basically keeps the user inbounds
         currentAction = Mathf.Clamp(currentAction, 0, 3);
 
 
@@ -582,6 +654,7 @@ public class Battle : MonoBehaviour
         }
     }
 
+    // shows what moves the monmon has and visual feedback to the player
     void HandleMoveSelection()
     {
         if (Input.GetKeyDown(KeyCode.RightArrow))
@@ -598,6 +671,7 @@ public class Battle : MonoBehaviour
 
         dialogBox.UpdateMoveSelection(currentMove, playerMon.Pokemon.Moves[currentMove]);
 
+        // can select a move to run turns or back out
         if (Input.GetKeyDown(KeyCode.Z))
         {
             var move = playerMon.Pokemon.Moves[currentMove];
@@ -616,6 +690,8 @@ public class Battle : MonoBehaviour
         }
     }
 
+    // handles party selection screen and checks if the monmon is fainted, out or you are being forced to choose
+    // because your previous monmon fainted
     void HandlePartySelection()
     {
         Action onSelect = () =>
@@ -648,6 +724,7 @@ public class Battle : MonoBehaviour
             partyScreen.CalledFrom = null;
         };
 
+        // you can't back out of the party screen without picking a healthy monmon
         Action onBack = () =>
         {
             if (playerMon.Pokemon.currentHp <= 0)
@@ -670,6 +747,7 @@ public class Battle : MonoBehaviour
         partyScreen.HandleUpdate(onSelect, onBack);
     }
 
+    // shows what the trainer is about to use and lets the player pick if they want to switch
     void HandleAboutToUse()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow) || Input.GetKeyDown(KeyCode.DownArrow))
@@ -696,7 +774,7 @@ public class Battle : MonoBehaviour
         }
     }
 
-
+    // handles the actual switching of the monomon
     IEnumerator SwitchMon(Pokemon newMon, bool isTrainerAboutToUse=false)
     {
         if (playerMon.Pokemon.currentHp > 0)
@@ -719,6 +797,7 @@ public class Battle : MonoBehaviour
             state = BattleState.RunningTurn;
     }
 
+    // shows the trainer sending out their next monmon
     IEnumerator SendNextTrainerMon()
     {
         state = BattleState.Busy;
@@ -732,11 +811,13 @@ public class Battle : MonoBehaviour
         state = BattleState.RunningTurn;
     }
 
+    // runs item used in battle 
     IEnumerator OnItemUsed(ItemBase usedItem)
     {
         state = BattleState.Busy;
         inventoryUI.gameObject.SetActive(false);
 
+        // checks if the item was a ball
         if (usedItem is BallItem)
         {
             yield return ThrowBall((BallItem)usedItem);
@@ -745,6 +826,8 @@ public class Battle : MonoBehaviour
         StartCoroutine(RunTurns(BattleAction.UseItem));
     }
 
+    // first checks if it is a trainer battle and if it is not then you attempt to capture the wild monmon
+    // after an animation
     IEnumerator ThrowBall(BallItem ballItem)
     {
         state = BattleState.Busy;
@@ -770,12 +853,14 @@ public class Battle : MonoBehaviour
 
         int shakeCount = TryToCatch(enemyMon.Pokemon, ballItem);
 
+        // shows how many times the ball shakes
         for (int i = 0; i < Mathf.Min(shakeCount, 3); i++)
         {
             yield return new WaitForSeconds(0.5f);
             yield return ball.transform.DOPunchRotation(new Vector3(0, 0, 10f), 0.8f).WaitForCompletion();
         }
 
+        // if the monmon was caught vs if it wasn't
         if (shakeCount == 4)
         {
             yield return dialogBox.TypeDialog($"{enemyMon.Pokemon.Basic.Name} was caught!");
@@ -803,6 +888,7 @@ public class Battle : MonoBehaviour
         }
     }
 
+    // formula to actually try and capture a wild monmon so we have a shake count
     int TryToCatch(Pokemon pokemon, BallItem ball)
     {
         float a = (3 * pokemon.MaxHp - 2 * pokemon.currentHp) * pokemon.Basic.CatchRate * ball.CatchRateModifer * ConditionsDB.GetStatusBonus(pokemon.Status) / (3 * pokemon.MaxHp);
@@ -824,7 +910,11 @@ public class Battle : MonoBehaviour
 
         return shakeCount;
     }
-
+    
+    // if you try to run this is the attempt to escape
+    // you cannot run from trainer battles
+    // if you are faster than the wild monmon always escape
+    // if slower run a calculation
     IEnumerator TryToEscape()
     {
         state = BattleState.Busy;
